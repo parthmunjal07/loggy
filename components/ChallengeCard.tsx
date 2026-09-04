@@ -87,9 +87,6 @@ export function ChallengeCard({
     daysElapsed > 0 ? Math.round((daysWithProgress / daysElapsed) * 100) : 0;
   const elapsedPct = Math.round((daysElapsed / totalDays) * 100);
 
-  // Only show the last 12 weeks for the compact preview
-  const previewLogs = logs.slice(-84);
-
   const isCompleted = status === "COMPLETED";
 
   return (
@@ -154,9 +151,9 @@ export function ChallengeCard({
         </div>
       </div>
 
-      {/* Compact heatmap preview */}
-      <div className="mb-4 overflow-hidden">
-        <HeatmapGrid logs={previewLogs} compact />
+      {/* Compact heatmap preview — starts from Day 1 */}
+      <div className="mb-4 overflow-x-auto pb-1">
+        <HeatmapGrid logs={logs} compact />
       </div>
 
       {/* Footer */}

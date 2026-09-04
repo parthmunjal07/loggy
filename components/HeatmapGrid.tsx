@@ -54,6 +54,8 @@ export function HeatmapGrid({
   const weeks = buildWeekColumns(logs);
 
   const gap = compact ? "gap-1" : "gap-1.5";
+  const colMaxW = compact ? "max-w-[48px]" : "max-w-[64px]";
+  const colMinW = compact ? "min-w-[16px]" : "min-w-[18px]";
 
   return (
     <div
@@ -61,14 +63,14 @@ export function HeatmapGrid({
       aria-label="Activity heatmap"
       className="w-full overflow-x-auto pb-1"
     >
-      <div className={`w-full flex ${gap} justify-between items-start`}>
+      <div className={`w-full flex ${gap} items-start`}>
         {/* Day-of-week labels (only shown in full view) */}
         {!compact && (
-          <div className={`flex flex-col ${gap} mr-1 mt-5 shrink-0`}>
+          <div className={`flex flex-col ${gap} mr-1 mt-5 shrink-0 w-3.5`}>
             {DAY_LABELS.map((d, i) => (
               <span
                 key={i}
-                className="w-3 h-3.5 flex items-center justify-center text-[9px] font-mono text-[var(--text-muted)] select-none"
+                className="w-full aspect-square flex items-center justify-center text-[9px] font-mono text-[var(--text-muted)] select-none"
               >
                 {i % 2 === 1 ? d : ""}
               </span>
@@ -76,11 +78,11 @@ export function HeatmapGrid({
           </div>
         )}
 
-        {/* Week columns — stretch evenly to fill 100% of container width */}
+        {/* Week columns — stretch evenly to fill 100% of container block width */}
         {weeks.map((week, wi) => (
           <div
             key={wi}
-            className={`flex flex-col ${gap} flex-1 min-w-[12px] max-w-[28px]`}
+            className={`flex flex-col ${gap} flex-1 ${colMinW} ${colMaxW}`}
           >
             {/* Month label on first day of month or first week */}
             {!compact && (

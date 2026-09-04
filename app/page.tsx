@@ -45,7 +45,7 @@ export default async function HomePage() {
             Leaderboard
           </Link>
           <Link
-            href={userId ? "/dashboard" : "/sign-in"}
+            href={userId ? "/dashboard" : "/signin"}
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium bg-[var(--accent)] text-zinc-950 hover:opacity-90 transition-opacity focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
           >
             <span>{userId ? "Open Dashboard" : "Sign In"}</span>
@@ -75,7 +75,7 @@ export default async function HomePage() {
         {/* CTAs (1 primary, 1 secondary, no duplicate intent) */}
         <div className="flex flex-col sm:flex-row items-center gap-3 mb-12">
           <Link
-            href={userId ? "/dashboard" : "/sign-up"}
+            href={userId ? "/dashboard" : "/signin"}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-[var(--accent)] text-zinc-950 hover:opacity-90 transition-opacity focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--accent)]"
           >
             <span>Start a challenge</span>
