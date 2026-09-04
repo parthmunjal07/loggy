@@ -45,8 +45,8 @@ export default async function TodayRedirectPage() {
     redirect("/dashboard");
   }
 
-  const challengeItems: TodayChallengeItem[] = challenges.map((c) => {
-    const todayLog = c.logs.find((l) => {
+  const challengeItems: TodayChallengeItem[] = challenges.map((c: any) => {
+    const todayLog = c.logs.find((l: any) => {
       const d = new Date(l.date);
       d.setUTCHours(0, 0, 0, 0);
       return d.getTime() === today.getTime();

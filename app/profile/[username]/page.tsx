@@ -65,9 +65,12 @@ export default async function PublicProfilePage({ params }: Props) {
 
   if (!user) notFound();
 
-  const totalPoints = user.pointsLedger.reduce((sum, p) => sum + p.points, 0);
+  const totalPoints = user.pointsLedger.reduce(
+    (sum: number, p: { points: number }) => sum + p.points,
+    0
+  );
 
-  const serializedChallenges: PublicChallenge[] = user.challenges.map((c) => ({
+  const serializedChallenges: PublicChallenge[] = user.challenges.map((c: any) => ({
     id: c.id,
     title: c.title,
     totalDays: c.totalDays,
@@ -75,7 +78,7 @@ export default async function PublicProfilePage({ params }: Props) {
     longestStreak: c.longestStreak,
     status: c.status,
     createdAt: c.createdAt.toISOString(),
-    logs: c.logs.map((l) => ({
+    logs: c.logs.map((l: any) => ({
       id: l.id,
       dayNumber: l.dayNumber,
       date: l.date.toISOString(),
@@ -83,10 +86,10 @@ export default async function PublicProfilePage({ params }: Props) {
       tasksTotal: l.tasksTotal,
       tasksDone: l.tasksDone,
       note: l.note,
-      completedTasks: l.tasks.map((t) => ({
+      completedTasks: l.tasks.map((t: any) => ({
         id: t.id,
         title: t.title,
-        tags: t.tags.map((tt) => ({
+        tags: t.tags.map((tt: any) => ({
           tag: {
             id: tt.tag.id,
             name: tt.tag.name,

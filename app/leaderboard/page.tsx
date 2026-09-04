@@ -85,7 +85,9 @@ export default async function LeaderboardPage() {
     select: { id: true, username: true },
   });
 
-  const usernameMap = new Map(users.map((u) => [u.id, u.username]));
+  const usernameMap = new Map<string, string | null>(
+    users.map((u: { id: string; username: string | null }) => [u.id, u.username])
+  );
 
   const topEntries: LeaderboardEntry[] = topN.map((entry, i) => ({
     rank: i + 1,

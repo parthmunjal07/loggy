@@ -93,6 +93,7 @@ export function LandingInteractiveDemo() {
                   stroke="var(--accent)"
                   strokeWidth="3"
                   strokeDasharray={2 * Math.PI * 12}
+                  initial={{ strokeDashoffset: (2 * Math.PI * 12) * (1 - pct / 100) }}
                   animate={{
                     strokeDashoffset: (2 * Math.PI * 12) * (1 - pct / 100),
                   }}

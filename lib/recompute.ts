@@ -68,7 +68,7 @@ export async function recomputeLogAndChallenge(
   });
 
   const tasksTotal = tasks.length;
-  const tasksDone = tasks.filter((t) => t.status === "DONE").length;
+  const tasksDone = tasks.filter((t: { status: string }) => t.status === "DONE").length;
   const completionPct =
     tasksTotal === 0 ? 0 : (tasksDone / tasksTotal) * 100;
 
@@ -91,7 +91,7 @@ export async function recomputeLogAndChallenge(
   const today = todayUTC();
 
   // Exclude future logs — streaks are computed from past-or-today days only
-  const pastLogs = allLogs.filter((l) => {
+  const pastLogs = allLogs.filter((l: { date: Date }) => {
     const d = new Date(l.date);
     d.setUTCHours(0, 0, 0, 0);
     return d <= today;
