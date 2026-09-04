@@ -1,0 +1,150 @@
+// schema.prisma — Loggy v2 (Kanban model)
+// Every completion %, streak, and points value is DERIVED from Task rows.
+// The only direct write path for a Log is the optional `note` field.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Connection URL is configured in prisma.config.ts (Prisma 7 requirement)
+}
+
+// ---------------------------------------------------------------------------
+// User — synced from Clerk via webhook (user.created)
+// ---------------------------------------------------------------------------
+model User {
+  id        String   @id              // Clerk user ID
+  email     String   @unique
+  username  String?  @unique
+  createdAt DateTime @default(now())
+
+  challenges    Challenge[]
+  pointsLedger  PointsLedger[]
+}
+
+// ---------------------------------------------------------------------------
+// Challenge — a named commitment with a fixed window of days
+// ---------------------------------------------------------------------------
+model Challenge {
+  id         String          @id @default(cuid())
+  userId     String
+  title      String
+  totalDays  Int             // immutable after creation
+  startDate  DateTime        // immutable after creation (date portion only)
+  status     ChallengeStatus @default(ACTIVE)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  // Derived streak fields — updated by the recompute pipeline
+  currentStreak Int @default(0)
+  longestStreak Int @default(0)
+
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs         Log[]
+  pointsLedger PointsLedger[]
+
+  @@index([userId])
+}
+
+enum ChallengeStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ABANDONED
+}
+
+// ---------------------------------------------------------------------------
+// Log — one row per calendar day of a challenge (bulk-inserted on creation)
+// All numeric fields are DERIVED from Task rows; never written directly.
+// ---------------------------------------------------------------------------
+model Log {
+  id            String   @id @default(cuid())
+  challengeId   String
+  dayNumber     Int      // 1 .. totalDays
+  date          DateTime // startDate + dayNumber - 1  (midnight UTC)
+  tasksTotal    Int      @default(0)
+  tasksDone     Int      @default(0)
+  completionPct Float    @default(0) // 0.0 – 100.0
+  note          String?  // the ONE field the user may write directly
+
+  challenge    Challenge      @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  tasks        Task[]
+  pointsLedger PointsLedger[]
+
+  @@unique([challengeId, dayNumber])
+  @@unique([challengeId, date])
+  @@index([challengeId])
+}
+
+// ---------------------------------------------------------------------------
+// Task — the atomic unit of work inside a day's Kanban board
+// ---------------------------------------------------------------------------
+model Task {
+  id        String     @id @default(cuid())
+  logId     String
+  title     String
+  status    TaskStatus @default(TODO)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  log  Log       @relation(fields: [logId], references: [id], onDelete: Cascade)
+  tags TaskTag[]
+
+  @@index([logId])
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+// ---------------------------------------------------------------------------
+// Tag — preset (userId = null) or user-created
+// ---------------------------------------------------------------------------
+model Tag {
+  id     String  @id @default(cuid())
+  name   String  @unique // case-insensitive enforced in application code
+  userId String? // null = preset/global tag
+
+  tasks TaskTag[]
+}
+
+// ---------------------------------------------------------------------------
+// TaskTag — many-to-many join between Task and Tag
+// ---------------------------------------------------------------------------
+model TaskTag {
+  taskId String
+  tagId  String
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, tagId])
+}
+
+// ---------------------------------------------------------------------------
+// PointsLedger — append-only points log; one row per (logId, reason) pair
+// for daily_completion, and one per (challengeId, reason) for streak bonuses.
+// ---------------------------------------------------------------------------
+model PointsLedger {
+  id          String   @id @default(cuid())
+  userId      String
+  challengeId String
+  logId       String?  // null for streak-milestone bonus rows
+  reason      String   // "daily_completion" | "streak_7" | "streak_30" | "streak_100"
+  points      Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  log       Log?      @relation(fields: [logId], references: [id], onDelete: SetNull)
+
+  // Each day gets exactly one daily_completion row
+  @@unique([logId, reason])
+  @@index([userId])
+  @@index([challengeId])
+}
