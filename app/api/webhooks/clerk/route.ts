@@ -5,6 +5,7 @@
 import { headers } from "next/headers";
 import { Webhook } from "svix";
 import { prisma } from "@/lib/prisma";
+import { resolveUniqueUsername } from "@/lib/ensureUser";
 
 type ClerkUserPayload = {
   id: string;
@@ -62,11 +63,17 @@ export async function POST(request: Request) {
       return new Response("No primary email in payload", { status: 422 });
     }
 
+    const uniqueUsername = await resolveUniqueUsername(
+      username,
+      id,
+      primaryEmail.split("@")[0]
+    );
+
     try {
       await prisma.user.upsert({
         where: { id },
-        update: { email: primaryEmail, username: username ?? null },
-        create: { id, email: primaryEmail, username: username ?? null },
+        update: { email: primaryEmail, username: uniqueUsername },
+        create: { id, email: primaryEmail, username: uniqueUsername },
       });
     } catch (err) {
       console.error("Failed to upsert user:", err);
