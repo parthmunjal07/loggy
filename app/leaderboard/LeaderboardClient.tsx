@@ -117,18 +117,25 @@ export function LeaderboardClient({
         {/* Current User's Pinned Standing Card */}
         {requesterEntry && (
           <div
-            className="rounded-xl border p-5 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-5 transition-colors"
+            className="rounded-xl border p-5 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-5 transition-colors relative overflow-hidden"
             style={{
               background: "var(--surface-1)",
-              borderColor: "var(--accent)",
+              borderColor: "var(--border)",
             }}
           >
+            {/* Subtle accent top border line */}
+            <div
+              className="absolute inset-x-0 top-0 h-[2px]"
+              style={{
+                background:
+                  "linear-gradient(90deg, transparent, var(--accent-dim), transparent)",
+              }}
+            />
+
             <div className="flex items-center gap-4">
               <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center font-mono font-bold text-lg border"
+                className="w-12 h-12 rounded-xl flex items-center justify-center font-mono font-bold text-lg border border-emerald-500/30 bg-emerald-500/10"
                 style={{
-                  background: "var(--surface-2)",
-                  borderColor: "var(--accent)",
                   color: "var(--accent)",
                 }}
               >
@@ -142,13 +149,7 @@ export function LeaderboardClient({
                   >
                     Your Weekly Standing
                   </span>
-                  <span
-                    className="text-[10px] font-mono px-2 py-0.5 rounded-full uppercase"
-                    style={{
-                      background: "var(--surface-3)",
-                      color: "var(--accent)",
-                    }}
-                  >
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                     Active
                   </span>
                 </div>
@@ -165,18 +166,18 @@ export function LeaderboardClient({
             {/* Breakdown stats */}
             <div className="flex items-center gap-4 sm:gap-6">
               <div className="flex flex-col">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-muted)]">
                   Base pts
                 </span>
-                <span className="text-sm font-mono font-semibold text-zinc-200 tabular-nums">
+                <span className="text-sm font-mono font-semibold text-[var(--text-primary)] tabular-nums">
                   {requesterEntry.breakdown.base}
                 </span>
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-muted)]">
                   Streak bonus
                 </span>
-                <span className="text-sm font-mono font-semibold text-zinc-200 tabular-nums">
+                <span className="text-sm font-mono font-semibold text-[var(--text-primary)] tabular-nums">
                   +{requesterEntry.breakdown.streakBonuses}
                 </span>
               </div>
@@ -187,7 +188,7 @@ export function LeaderboardClient({
                   borderColor: "var(--border)",
                 }}
               >
-                <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">
                   Total Score
                 </span>
                 <span
@@ -210,21 +211,21 @@ export function LeaderboardClient({
                 {
                   label: "1st Place",
                   icon: Crown,
-                  color: "text-amber-400",
+                  color: "text-amber-500 dark:text-amber-400",
                   bg: "bg-amber-400/10",
                   border: "border-amber-500/40",
                 },
                 {
                   label: "2nd Place",
                   icon: Medal,
-                  color: "text-zinc-300",
-                  bg: "bg-zinc-300/10",
+                  color: "text-zinc-600 dark:text-zinc-300",
+                  bg: "bg-zinc-500/10",
                   border: "border-zinc-500/40",
                 },
                 {
                   label: "3rd Place",
                   icon: Medal,
-                  color: "text-orange-400",
+                  color: "text-orange-500 dark:text-orange-400",
                   bg: "bg-orange-400/10",
                   border: "border-orange-500/40",
                 },
@@ -235,14 +236,24 @@ export function LeaderboardClient({
               return (
                 <div
                   key={entry.userId}
-                  className={`rounded-xl border p-5 flex flex-col justify-between gap-4 relative transition-all ${
-                    isCurrentUser ? "ring-1 ring-[var(--accent)]" : ""
+                  className={`rounded-xl border p-5 flex flex-col justify-between gap-4 relative transition-all overflow-hidden ${
+                    isCurrentUser ? "border-emerald-500/30 bg-emerald-500/[0.02]" : ""
                   }`}
                   style={{
-                    background: "var(--surface-1)",
-                    borderColor: isCurrentUser ? "var(--accent)" : "var(--border)",
+                    background: isCurrentUser ? undefined : "var(--surface-1)",
+                    borderColor: isCurrentUser ? undefined : "var(--border)",
                   }}
                 >
+                  {isCurrentUser && (
+                    <div
+                      className="absolute inset-x-0 top-0 h-[2px]"
+                      style={{
+                        background:
+                          "linear-gradient(90deg, transparent, var(--accent-dim), transparent)",
+                      }}
+                    />
+                  )}
+
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <div
@@ -251,7 +262,7 @@ export function LeaderboardClient({
                         <IconComponent size={16} weight="fill" />
                       </div>
                       <div>
-                        <span className="text-[11px] font-mono uppercase tracking-wider text-zinc-500">
+                        <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--text-muted)]">
                           {medal.label}
                         </span>
                         <div className="flex items-center gap-1.5">
@@ -262,7 +273,7 @@ export function LeaderboardClient({
                               style={{ color: "var(--text-primary)" }}
                             >
                               @{entry.username}
-                              <ArrowRight size={11} className="text-zinc-500" />
+                              <ArrowRight size={11} className="text-[var(--text-muted)]" />
                             </Link>
                           ) : (
                             <span
@@ -273,13 +284,7 @@ export function LeaderboardClient({
                             </span>
                           )}
                           {isCurrentUser && (
-                            <span
-                              className="text-[10px] font-mono px-1.5 py-0.2 rounded"
-                              style={{
-                                background: "var(--surface-3)",
-                                color: "var(--accent)",
-                              }}
-                            >
+                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                               You
                             </span>
                           )}
@@ -294,7 +299,7 @@ export function LeaderboardClient({
                       >
                         {entry.breakdown.total}
                       </span>
-                      <p className="text-[10px] font-mono text-zinc-500 uppercase">
+                      <p className="text-[10px] font-mono text-[var(--text-muted)] uppercase">
                         pts
                       </p>
                     </div>
@@ -347,7 +352,7 @@ export function LeaderboardClient({
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr
-                  className="border-b text-[11px] font-mono uppercase tracking-wider text-zinc-400"
+                  className="border-b text-[11px] font-mono uppercase tracking-wider text-[var(--text-secondary)]"
                   style={{
                     background: "var(--surface-2)",
                     borderColor: "var(--border)",
@@ -370,19 +375,19 @@ export function LeaderboardClient({
                         key={entry.userId}
                         className={`border-b transition-colors hover:bg-[var(--surface-2)]/50 ${
                           isCurrentUser
-                            ? "bg-[var(--surface-2)]/30 font-medium"
+                            ? "bg-[var(--surface-2)]/50 font-medium"
                             : ""
                         }`}
                         style={{ borderColor: "var(--border)" }}
                       >
                         {/* Rank */}
-                        <td className="py-3.5 px-5 font-mono text-xs tabular-nums text-zinc-400">
+                        <td className="py-3.5 px-5 font-mono text-xs tabular-nums text-[var(--text-secondary)]">
                           {entry.rank === 1 ? (
-                            <span className="text-amber-400 font-bold">#1</span>
+                            <span className="text-amber-500 dark:text-amber-400 font-bold">#1</span>
                           ) : entry.rank === 2 ? (
-                            <span className="text-zinc-300 font-bold">#2</span>
+                            <span className="text-zinc-600 dark:text-zinc-300 font-bold">#2</span>
                           ) : entry.rank === 3 ? (
-                            <span className="text-orange-400 font-bold">#3</span>
+                            <span className="text-orange-500 dark:text-orange-400 font-bold">#3</span>
                           ) : (
                             `#${entry.rank}`
                           )}
@@ -398,7 +403,7 @@ export function LeaderboardClient({
                                 style={{ color: "var(--text-primary)" }}
                               >
                                 @{entry.username}
-                                <ArrowRight size={10} className="text-zinc-500" />
+                                <ArrowRight size={10} className="text-[var(--text-muted)]" />
                               </Link>
                             ) : (
                               <span
@@ -423,14 +428,14 @@ export function LeaderboardClient({
                         </td>
 
                         {/* Base Points */}
-                        <td className="py-3.5 px-5 text-xs font-mono tabular-nums text-zinc-300">
+                        <td className="py-3.5 px-5 text-xs font-mono tabular-nums text-[var(--text-secondary)]">
                           {entry.breakdown.base}
                         </td>
 
                         {/* Streak Bonuses */}
-                        <td className="py-3.5 px-5 text-xs font-mono tabular-nums text-zinc-300">
+                        <td className="py-3.5 px-5 text-xs font-mono tabular-nums text-[var(--text-secondary)]">
                           {entry.breakdown.streakBonuses > 0 ? (
-                            <span className="text-emerald-400">
+                            <span className="text-emerald-600 dark:text-emerald-400">
                               +{entry.breakdown.streakBonuses}
                             </span>
                           ) : (
@@ -458,10 +463,7 @@ export function LeaderboardClient({
 
                 {/* Outside Top N Pinned Row for current user */}
                 {!isRequesterInTopEntries && requesterEntry && (
-                  <tr
-                    className="border-t-2 transition-colors bg-[var(--surface-2)]/60 font-medium"
-                    style={{ borderColor: "var(--accent)" }}
-                  >
+                  <tr className="border-t border-emerald-500/30 transition-colors bg-emerald-500/[0.04] font-medium">
                     <td className="py-3.5 px-5 font-mono text-xs tabular-nums text-[var(--accent)] font-bold">
                       #{requesterEntry.rank}
                     </td>
@@ -476,13 +478,7 @@ export function LeaderboardClient({
                             requesterEntry.userId
                           )}
                         </span>
-                        <span
-                          className="text-[10px] font-mono px-1.5 py-0.5 rounded"
-                          style={{
-                            background: "var(--surface-3)",
-                            color: "var(--accent)",
-                          }}
-                        >
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                           You (outside top {topEntries.length})
                         </span>
                       </div>

@@ -236,7 +236,7 @@ export function PublicProfileClient({
                     onClick={() => setSelectedChallengeId(c.id)}
                     className={`px-3.5 py-1.5 rounded-lg text-xs font-mono whitespace-nowrap border transition-colors ${
                       c.id === activeChallenge.id
-                        ? "border-[var(--accent)] text-white bg-[var(--surface-2)]"
+                        ? "border-emerald-500/40 text-white bg-[var(--surface-2)]"
                         : "border-[var(--border)] text-zinc-400 hover:text-zinc-200 bg-[var(--surface-1)]"
                     }`}
                   >

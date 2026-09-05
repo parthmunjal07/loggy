@@ -217,8 +217,8 @@ export function ChallengeDetailClient({
               onClick={() => setActiveView("heatmap")}
               className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg font-medium transition-all ${
                 activeView === "heatmap"
-                  ? "bg-[var(--surface-3)] text-white shadow-sm"
-                  : "text-zinc-400 hover:text-zinc-200"
+                  ? "bg-[var(--surface-3)] text-[var(--text-primary)] shadow-sm"
+                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
               <SquaresFour size={14} />
@@ -229,8 +229,8 @@ export function ChallengeDetailClient({
               onClick={() => setActiveView("sheet")}
               className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg font-medium transition-all ${
                 activeView === "sheet"
-                  ? "bg-[var(--surface-3)] text-white shadow-sm"
-                  : "text-zinc-400 hover:text-zinc-200"
+                  ? "bg-[var(--surface-3)] text-[var(--text-primary)] shadow-sm"
+                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
               <Table size={14} />

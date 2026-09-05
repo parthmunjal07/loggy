@@ -25,8 +25,25 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <ClerkProvider>
       <html
         lang="en"
+        suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       >
+        <head>
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                (function() {
+                  try {
+                    var stored = localStorage.getItem('loggy-theme');
+                    var theme = stored === 'light' || stored === 'dark' ? stored : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                    document.documentElement.setAttribute('data-theme', theme);
+                    document.documentElement.classList.add(theme);
+                  } catch (e) {}
+                })();
+              `,
+            }}
+          />
+        </head>
         <body className="min-h-full flex flex-col">
           {children}
           <Analytics />

@@ -5,6 +5,7 @@
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { Lightning } from "@phosphor-icons/react/dist/ssr";
+import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard" },
@@ -62,8 +63,9 @@ export function AppNav() {
         </Link>
       </nav>
 
-      {/* User */}
-      <div className="flex items-center">
+      {/* User & Theme Toggle */}
+      <div className="flex items-center gap-3">
+        <ThemeToggle />
         <UserButton
           appearance={{
             elements: {

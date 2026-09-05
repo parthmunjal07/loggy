@@ -19,6 +19,7 @@ import {
   Trophy,
 } from "@phosphor-icons/react/dist/ssr";
 import { LandingInteractiveDemo } from "@/components/LandingInteractiveDemo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default async function HomePage() {
   const { userId } = await auth();
@@ -37,13 +38,14 @@ export default async function HomePage() {
           <span>Loggy</span>
         </Link>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <Link
             href="/leaderboard"
             className="hidden sm:inline-block text-xs font-mono text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
           >
             Leaderboard
           </Link>
+          <ThemeToggle />
           <Link
             href={userId ? "/dashboard" : "/signin"}
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium bg-[var(--accent)] text-zinc-950 hover:opacity-90 transition-opacity focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
@@ -57,8 +59,8 @@ export default async function HomePage() {
       {/* ── 2. Hero Section (Strict layout discipline, fits initial viewport) ─ */}
       <section className="relative pt-12 sm:pt-16 pb-12 px-4 sm:px-6 max-w-5xl mx-auto w-full flex flex-col items-center text-center">
         {/* Eyebrow (1 of allowed max across page) */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-800 bg-zinc-900/80 text-xs font-mono text-zinc-400 mb-6">
-          <Flame size={14} weight="fill" className="text-amber-400" />
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-xs font-mono text-[var(--text-secondary)] mb-6 shadow-xs">
+          <Flame size={14} weight="fill" className="text-amber-500 dark:text-amber-400" />
           <span>DAILY HABIT ENGINE FOR BUILDERS</span>
         </div>
 
@@ -76,7 +78,7 @@ export default async function HomePage() {
         <div className="flex flex-col sm:flex-row items-center gap-3 mb-12">
           <Link
             href={userId ? "/dashboard" : "/signin"}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-[var(--accent)] text-zinc-950 hover:opacity-90 transition-opacity focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--accent)]"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-[var(--accent)] text-white dark:text-zinc-950 hover:opacity-90 transition-opacity focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--accent)] shadow-xs"
           >
             <span>Start a challenge</span>
             <ArrowRight size={15} weight="bold" />
@@ -85,7 +87,7 @@ export default async function HomePage() {
             href="/leaderboard"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-[var(--surface-2)] text-[var(--text-primary)] hover:bg-[var(--surface-3)] transition-colors border border-[var(--border)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
           >
-            <Trophy size={16} weight="duotone" className="text-amber-400" />
+            <Trophy size={16} weight="duotone" className="text-amber-500 dark:text-amber-400" />
             <span>Weekly rankings</span>
           </Link>
         </div>
@@ -109,9 +111,9 @@ export default async function HomePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Bento Cell 1: Daily Scoped Kanban */}
-          <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/30 flex flex-col justify-between">
+          <div className="p-6 rounded-2xl border border-[var(--border)] bg-[var(--surface-1)] shadow-sm flex flex-col justify-between">
             <div>
-              <div className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700/80 flex items-center justify-center text-[var(--accent)] mb-4">
+              <div className="w-10 h-10 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--accent)] mb-4">
                 <Kanban size={20} weight="duotone" />
               </div>
               <h3 className="text-base font-semibold text-[var(--text-primary)] mb-2">
@@ -121,15 +123,15 @@ export default async function HomePage() {
                 Tasks live on a 3-column board scoped exclusively to the current day. Move tasks to Done to trigger real-time completion recomputation.
               </p>
             </div>
-            <div className="pt-6 mt-6 border-t border-zinc-800/80 font-mono text-[11px] text-[var(--text-muted)]">
+            <div className="pt-6 mt-6 border-t border-[var(--border)] font-mono text-[11px] text-[var(--text-muted)]">
               Midnight lock protects historical integrity.
             </div>
           </div>
 
           {/* Bento Cell 2: Proportional Heatmap */}
-          <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/30 flex flex-col justify-between">
+          <div className="p-6 rounded-2xl border border-[var(--border)] bg-[var(--surface-1)] shadow-sm flex flex-col justify-between">
             <div>
-              <div className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700/80 flex items-center justify-center text-[var(--accent)] mb-4">
+              <div className="w-10 h-10 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--accent)] mb-4">
                 <Rows size={20} weight="duotone" />
               </div>
               <h3 className="text-base font-semibold text-[var(--text-primary)] mb-2">
@@ -139,15 +141,15 @@ export default async function HomePage() {
                 Five discrete heat tiers scale automatically to fill the container block width. Each cell is accessible and links directly to that day&apos;s tasks.
               </p>
             </div>
-            <div className="pt-6 mt-6 border-t border-zinc-800/80 font-mono text-[11px] text-[var(--text-muted)]">
+            <div className="pt-6 mt-6 border-t border-[var(--border)] font-mono text-[11px] text-[var(--text-muted)]">
               Supports 30-day, 60-day, and 100-day challenges.
             </div>
           </div>
 
           {/* Bento Cell 3: Competitive Leaderboards */}
-          <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/30 flex flex-col justify-between">
+          <div className="p-6 rounded-2xl border border-[var(--border)] bg-[var(--surface-1)] shadow-sm flex flex-col justify-between">
             <div>
-              <div className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700/80 flex items-center justify-center text-amber-400 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-amber-500 dark:text-amber-400 mb-4">
                 <Trophy size={20} weight="duotone" />
               </div>
               <h3 className="text-base font-semibold text-[var(--text-primary)] mb-2">
@@ -157,7 +159,7 @@ export default async function HomePage() {
                 Earn base points on completion and unlock compounding bonuses at 7, 30, and 100-day streak milestones. Rankings reset every Monday UTC.
               </p>
             </div>
-            <div className="pt-6 mt-6 border-t border-zinc-800/80 font-mono text-[11px] text-[var(--text-muted)]">
+            <div className="pt-6 mt-6 border-t border-[var(--border)] font-mono text-[11px] text-[var(--text-muted)]">
               Public profile feeds verify consistency.
             </div>
           </div>

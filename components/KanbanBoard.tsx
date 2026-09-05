@@ -679,8 +679,8 @@ export function KanbanBoard({
                           <p
                             className={`text-sm leading-snug break-words ${
                               task.status === "DONE"
-                                ? "line-through text-zinc-400"
-                                : "text-zinc-100"
+                                ? "line-through text-[var(--text-muted)]"
+                                : "text-[var(--text-primary)]"
                             }`}
                           >
                             {task.title}

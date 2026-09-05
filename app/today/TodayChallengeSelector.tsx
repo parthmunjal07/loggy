@@ -78,7 +78,7 @@ export function TodayChallengeSelector({ challenges }: Props) {
                 <Link
                   key={c.id}
                   href={targetUrl}
-                  className="group card rounded-2xl p-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-150 hover:border-[var(--accent)] active:scale-[0.99]"
+                  className="group card rounded-2xl p-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-150 hover:border-zinc-700 active:scale-[0.99]"
                   style={{
                     background: "var(--surface-1)",
                     borderColor: "var(--border)",

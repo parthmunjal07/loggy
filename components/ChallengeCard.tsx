@@ -90,101 +90,105 @@ export function ChallengeCard({
   const isCompleted = status === "COMPLETED";
 
   return (
-    <motion.article
-      initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: shouldReduceMotion ? 0 : 0.5,
-        delay: shouldReduceMotion ? 0 : index * 0.07,
-        ease: [0.16, 1, 0.3, 1],
-      }}
-      className="card group relative overflow-hidden focus-within:ring-1 focus-within:ring-[var(--accent)]"
-      style={{ padding: "20px" }}
+    <Link
+      href={`/challenges/${id}`}
+      className="block group focus:outline-none"
+      aria-label={`View challenge ${title}`}
     >
-      {/* Subtle accent top border */}
-      <div
-        className="absolute inset-x-0 top-0 h-px"
-        style={{
-          background:
-            "linear-gradient(90deg, transparent, var(--accent-dim), transparent)",
-          opacity: isCompleted ? 1 : 0.4,
+      <motion.article
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{
+          duration: shouldReduceMotion ? 0 : 0.5,
+          delay: shouldReduceMotion ? 0 : index * 0.07,
+          ease: [0.16, 1, 0.3, 1],
         }}
-      />
+        className="card relative overflow-hidden transition-all duration-200 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-[var(--surface-2)]/50 cursor-pointer focus-within:ring-1 focus-within:ring-[var(--accent)]"
+        style={{ padding: "20px" }}
+      >
+        {/* Subtle accent top border */}
+        <div
+          className="absolute inset-x-0 top-0 h-px"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent, var(--accent-dim), transparent)",
+            opacity: isCompleted ? 1 : 0.4,
+          }}
+        />
 
-      {/* Header row */}
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            {isCompleted && (
-              <CheckCircle
-                size={14}
-                weight="fill"
-                style={{ color: "var(--accent)", flexShrink: 0 }}
-              />
-            )}
-            <h2
-              className="text-sm font-semibold truncate"
-              style={{ color: "var(--text-primary)" }}
+        {/* Header row */}
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              {isCompleted && (
+                <CheckCircle
+                  size={14}
+                  weight="fill"
+                  style={{ color: "var(--accent)", flexShrink: 0 }}
+                />
+              )}
+              <h2
+                className="text-sm font-semibold truncate group-hover:text-[var(--accent)] transition-colors duration-150"
+                style={{ color: "var(--text-primary)" }}
+              >
+                {title}
+              </h2>
+            </div>
+            <p
+              className="text-xs font-mono"
+              style={{ color: "var(--text-muted)" }}
             >
-              {title}
-            </h2>
+              Day {Math.min(daysElapsed, totalDays)} of {totalDays}
+            </p>
           </div>
-          <p
-            className="text-xs font-mono"
-            style={{ color: "var(--text-muted)" }}
-          >
-            Day {Math.min(daysElapsed, totalDays)} of {totalDays}
-          </p>
+
+          <div className="flex items-center gap-2.5 shrink-0">
+            <StreakBadge streak={currentStreak} size="sm" />
+            <div className="relative flex items-center justify-center">
+              <ProgressRing pct={elapsedPct} />
+              <span
+                className="absolute text-[9px] font-mono font-bold"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                {elapsedPct}%
+              </span>
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0">
-          <StreakBadge streak={currentStreak} size="sm" />
-          <div className="relative flex items-center justify-center">
-            <ProgressRing pct={elapsedPct} />
-            <span
-              className="absolute text-[9px] font-mono font-bold"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              {elapsedPct}%
-            </span>
-          </div>
+        {/* Compact heatmap preview — starts from Day 1 */}
+        <div className="mb-4 overflow-x-auto pb-1">
+          <HeatmapGrid logs={logs} compact />
         </div>
-      </div>
 
-      {/* Compact heatmap preview — starts from Day 1 */}
-      <div className="mb-4 overflow-x-auto pb-1">
-        <HeatmapGrid logs={logs} compact />
-      </div>
-
-      {/* Footer */}
-      <div className="flex items-center justify-between">
-        <span
-          className="text-[11px] font-mono"
-          style={{ color: "var(--text-muted)" }}
-        >
-          {daysWithProgress}/{daysElapsed} days active
-          {progressPct > 0 && ` · ${progressPct}% completion rate`}
-        </span>
-
-        <Link
-          href={`/challenges/${id}`}
-          className="flex items-center gap-1 text-[11px] font-medium transition-colors duration-150"
-          style={{ color: "var(--text-muted)" }}
-          aria-label={`View ${title}`}
-        >
+        {/* Footer */}
+        <div className="flex items-center justify-between">
           <span
-            className="group-hover:text-[var(--accent)] transition-colors duration-150"
-            style={{ color: "inherit" }}
-          >
-            View
-          </span>
-          <ArrowRight
-            size={12}
-            className="group-hover:translate-x-0.5 transition-transform duration-150"
+            className="text-[11px] font-mono"
             style={{ color: "var(--text-muted)" }}
-          />
-        </Link>
-      </div>
-    </motion.article>
+          >
+            {daysWithProgress}/{daysElapsed} days active
+            {progressPct > 0 && ` · ${progressPct}% completion rate`}
+          </span>
+
+          <div
+            className="flex items-center gap-1 text-[11px] font-medium transition-colors duration-150"
+            style={{ color: "var(--text-muted)" }}
+          >
+            <span
+              className="group-hover:text-[var(--accent)] transition-colors duration-150"
+              style={{ color: "inherit" }}
+            >
+              View
+            </span>
+            <ArrowRight
+              size={12}
+              className="group-hover:translate-x-0.5 transition-transform duration-150"
+              style={{ color: "var(--text-muted)" }}
+            />
+          </div>
+        </div>
+      </motion.article>
+    </Link>
   );
 }
