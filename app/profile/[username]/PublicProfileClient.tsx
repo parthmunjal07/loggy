@@ -37,7 +37,7 @@ export type PublicLog = {
 export type PublicChallenge = {
   id: string;
   title: string;
-  totalDays: number;
+  totalDays: number | null;
   currentStreak: number;
   longestStreak: number;
   status: string;
@@ -274,7 +274,9 @@ export function PublicProfileClient({
                   className="text-xs font-mono mt-0.5"
                   style={{ color: "var(--text-muted)" }}
                 >
-                  {activeChallenge.totalDays} Days Commitment
+                  {activeChallenge.totalDays != null
+                    ? `${activeChallenge.totalDays} Days Commitment`
+                    : "Open-ended Log"}
                 </p>
               </div>
 

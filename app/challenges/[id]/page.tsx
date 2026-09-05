@@ -1,14 +1,15 @@
-// app/challenges/[id]/page.tsx — Challenge detail: full heatmap
-// Server component — fetches challenge + all logs directly via Prisma.
-
 import { auth } from "@clerk/nextjs/server";
 import { redirect, notFound } from "next/navigation";
 import { AppNav } from "@/components/AppNav";
 import { prisma } from "@/lib/prisma";
+import { ensureTodayLog } from "@/lib/ensureTodayLog";
 import { ChallengeDetailClient } from "./ChallengeDetailClient";
 import type { Metadata } from "next";
 
-type Props = { params: Promise<{ id: string }> };
+type Props = {
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<{ today?: string }>;
+};
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
@@ -21,11 +22,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function ChallengePage({ params }: Props) {
+export default async function ChallengePage({ params, searchParams }: Props) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
   const { id } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+
+  const challengeBasic = await prisma.challenge.findUnique({
+    where: { id },
+    select: { id: true, userId: true, startDate: true, totalDays: true },
+  });
+
+  if (!challengeBasic) notFound();
+  if (challengeBasic.userId !== userId) redirect("/dashboard");
+
+  // For open-ended challenges, lazily create today's log row if missing
+  if (challengeBasic.totalDays === null) {
+    await ensureTodayLog(challengeBasic);
+  }
 
   const challenge = await prisma.challenge.findUnique({
     where: { id },
@@ -47,7 +62,6 @@ export default async function ChallengePage({ params }: Props) {
   });
 
   if (!challenge) notFound();
-  if (challenge.userId !== userId) redirect("/dashboard");
 
   const logs = challenge.logs.map((l) => {
     // Extract distinct tags from completed tasks only
@@ -70,6 +84,20 @@ export default async function ChallengePage({ params }: Props) {
     };
   });
 
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  const todayLog = challenge.logs.find((l) => {
+    const d = new Date(l.date);
+    d.setUTCHours(0, 0, 0, 0);
+    return d.getTime() === today.getTime();
+  });
+
+  const shouldOpenToday =
+    resolvedSearchParams.today === "true" ||
+    (challenge.totalDays === null && challenge.logs.length <= 1);
+
+  const initialActiveLogId = shouldOpenToday ? todayLog?.id ?? null : null;
+
   return (
     <>
       <AppNav />
@@ -80,6 +108,7 @@ export default async function ChallengePage({ params }: Props) {
         currentStreak={challenge.currentStreak}
         longestStreak={challenge.longestStreak}
         logs={logs}
+        initialActiveLogId={initialActiveLogId}
       />
     </>
   );

@@ -1,9 +1,7 @@
-// app/today/page.tsx
-// Smart selector and redirect for today's Kanban board.
-
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { ensureTodayLog } from "@/lib/ensureTodayLog";
 import {
   TodayChallengeSelector,
   type TodayChallengeItem,
@@ -45,25 +43,41 @@ export default async function TodayRedirectPage() {
     redirect("/dashboard");
   }
 
-  const challengeItems: TodayChallengeItem[] = challenges.map((c: any) => {
-    const todayLog = c.logs.find((l: any) => {
-      const d = new Date(l.date);
-      d.setUTCHours(0, 0, 0, 0);
-      return d.getTime() === today.getTime();
-    });
+  const challengeItems: TodayChallengeItem[] = await Promise.all(
+    challenges.map(async (c) => {
+      let todayLog = c.logs.find((l) => {
+        const d = new Date(l.date);
+        d.setUTCHours(0, 0, 0, 0);
+        return d.getTime() === today.getTime();
+      });
 
-    return {
-      id: c.id,
-      title: c.title,
-      totalDays: c.totalDays,
-      currentStreak: c.currentStreak,
-      todayLogId: todayLog?.id || null,
-      todayDayNumber: todayLog?.dayNumber || null,
-      todayCompletionPct: todayLog?.completionPct || 0,
-      todayTasksDone: todayLog?.tasksDone || 0,
-      todayTasksTotal: todayLog?.tasksTotal || 0,
-    };
-  });
+      if (!todayLog && c.totalDays === null) {
+        const createdLog = await ensureTodayLog(c);
+        if (createdLog) {
+          todayLog = {
+            id: createdLog.id,
+            dayNumber: createdLog.dayNumber,
+            date: createdLog.date,
+            completionPct: createdLog.completionPct,
+            tasksDone: createdLog.tasksDone,
+            tasksTotal: createdLog.tasksTotal,
+          };
+        }
+      }
+
+      return {
+        id: c.id,
+        title: c.title,
+        totalDays: c.totalDays,
+        currentStreak: c.currentStreak,
+        todayLogId: todayLog?.id || null,
+        todayDayNumber: todayLog?.dayNumber || null,
+        todayCompletionPct: todayLog?.completionPct || 0,
+        todayTasksDone: todayLog?.tasksDone || 0,
+        todayTasksTotal: todayLog?.tasksTotal || 0,
+      };
+    })
+  );
 
   // If the user has exactly 1 active challenge, automatically redirect to today's board
   if (challengeItems.length === 1 && challengeItems[0].todayLogId) {

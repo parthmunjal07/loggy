@@ -31,7 +31,7 @@ model Challenge {
   id         String          @id @default(cuid())
   userId     String
   title      String
-  totalDays  Int             // immutable after creation
+  totalDays  Int?            // null = open-ended ongoing log; number = fixed-day challenge
   startDate  DateTime        // immutable after creation (date portion only)
   status     ChallengeStatus @default(ACTIVE)
   createdAt  DateTime        @default(now())

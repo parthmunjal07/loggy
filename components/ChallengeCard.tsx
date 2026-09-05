@@ -12,7 +12,7 @@ import type { HeatmapLog } from "./HeatmapGrid";
 type ChallengeCardProps = {
   id: string;
   title: string;
-  totalDays: number;
+  totalDays: number | null;
   daysElapsed: number;
   daysWithProgress: number;
   currentStreak: number;
@@ -85,7 +85,8 @@ export function ChallengeCard({
   const shouldReduceMotion = useReducedMotion();
   const progressPct =
     daysElapsed > 0 ? Math.round((daysWithProgress / daysElapsed) * 100) : 0;
-  const elapsedPct = Math.round((daysElapsed / totalDays) * 100);
+  const elapsedPct =
+    totalDays != null ? Math.round((daysElapsed / totalDays) * 100) : null;
 
   const isCompleted = status === "COMPLETED";
 
@@ -138,21 +139,25 @@ export function ChallengeCard({
               className="text-xs font-mono"
               style={{ color: "var(--text-muted)" }}
             >
-              Day {Math.min(daysElapsed, totalDays)} of {totalDays}
+              {totalDays != null
+                ? `Day ${Math.min(daysElapsed, totalDays)} of ${totalDays}`
+                : `Day ${daysElapsed}`}
             </p>
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0">
             <StreakBadge streak={currentStreak} size="sm" />
-            <div className="relative flex items-center justify-center">
-              <ProgressRing pct={elapsedPct} />
-              <span
-                className="absolute text-[9px] font-mono font-bold"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                {elapsedPct}%
-              </span>
-            </div>
+            {elapsedPct !== null && (
+              <div className="relative flex items-center justify-center">
+                <ProgressRing pct={elapsedPct} />
+                <span
+                  className="absolute text-[9px] font-mono font-bold"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  {elapsedPct}%
+                </span>
+              </div>
+            )}
           </div>
         </div>
 

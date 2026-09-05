@@ -7,6 +7,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { ChallengeStatus } from "@prisma/client";
+import { ensureTodayLog } from "@/lib/ensureTodayLog";
 
 // ─── GET /api/challenges/[id] ────────────────────────────────────────────────
 
@@ -22,6 +23,25 @@ export async function GET(
   const { id } = await params;
 
   try {
+    const challengeBasic = await prisma.challenge.findUnique({
+      where: { id },
+      select: { id: true, userId: true, startDate: true, totalDays: true },
+    });
+
+    if (!challengeBasic) {
+      return Response.json({ error: "Not found" }, { status: 404 });
+    }
+
+    // Only the owner can view their challenge
+    if (challengeBasic.userId !== userId) {
+      return new Response("Forbidden", { status: 403 });
+    }
+
+    // For open-ended challenges, lazily create today's log if it does not exist yet
+    if (challengeBasic.totalDays === null) {
+      await ensureTodayLog(challengeBasic);
+    }
+
     const challenge = await prisma.challenge.findUnique({
       where: { id },
       include: {
@@ -39,15 +59,6 @@ export async function GET(
         },
       },
     });
-
-    if (!challenge) {
-      return Response.json({ error: "Not found" }, { status: 404 });
-    }
-
-    // Only the owner can view their challenge
-    if (challenge.userId !== userId) {
-      return new Response("Forbidden", { status: 403 });
-    }
 
     return Response.json({ challenge });
   } catch (err) {

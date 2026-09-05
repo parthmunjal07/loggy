@@ -29,10 +29,11 @@ type Log = HeatmapLog & {
 type Props = {
   challengeId: string;
   title: string;
-  totalDays: number;
+  totalDays: number | null;
   currentStreak: number;
   longestStreak: number;
   logs: Log[];
+  initialActiveLogId?: string | null;
 };
 
 export function ChallengeDetailClient({
@@ -42,10 +43,13 @@ export function ChallengeDetailClient({
   currentStreak,
   longestStreak,
   logs: initialLogs,
+  initialActiveLogId,
 }: Props) {
   const [activeView, setActiveView] = useState<"heatmap" | "sheet">("heatmap");
   const [logsState, setLogsState] = useState<Log[]>(initialLogs);
-  const [activePanelLogId, setActivePanelLogId] = useState<string | null>(null);
+  const [activePanelLogId, setActivePanelLogId] = useState<string | null>(
+    initialActiveLogId || null
+  );
   const [panelTasks, setPanelTasks] = useState<KanbanTask[] | null>(null);
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
   const reduce = useReducedMotion();
@@ -177,7 +181,7 @@ export function ChallengeDetailClient({
           style={{ background: "var(--border)" }}
         >
           {[
-            { label: "Total days", value: totalDays },
+            { label: "Total days", value: totalDays != null ? totalDays : "Ongoing" },
             { label: "Days elapsed", value: daysElapsed },
             { label: "Days active", value: daysWithProgress },
             { label: "Best streak", value: `${longestStreak}d` },

@@ -18,6 +18,14 @@ export default async function DashboardPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
+  const totalChallenges = await prisma.challenge.count({
+    where: { userId },
+  });
+
+  if (totalChallenges === 0) {
+    redirect("/welcome");
+  }
+
   const challenges = await prisma.challenge.findMany({
     where: { userId, status: { in: ["ACTIVE", "PAUSED"] } },
     orderBy: { createdAt: "desc" },
@@ -38,13 +46,12 @@ export default async function DashboardPage() {
 
   const enriched = challenges.map((c) => {
     const msPerDay = 1000 * 60 * 60 * 24;
-    const daysElapsed = Math.min(
-      c.totalDays,
-      Math.max(
-        0,
-        Math.floor((now.getTime() - c.startDate.getTime()) / msPerDay) + 1
-      )
+    const rawElapsed = Math.max(
+      0,
+      Math.floor((now.getTime() - c.startDate.getTime()) / msPerDay) + 1
     );
+    const daysElapsed =
+      c.totalDays != null ? Math.min(c.totalDays, rawElapsed) : rawElapsed;
     const daysWithProgress = c.logs.filter((l) => l.completionPct > 0).length;
 
     return {

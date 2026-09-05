@@ -1,19 +1,25 @@
 // app/api/challenges/route.ts
 //
-// POST /api/challenges — create a challenge and bulk-insert one Log row per day
+// POST /api/challenges — create a challenge (structured with bulk logs, or open-ended with lazy logs)
 // GET  /api/challenges — list the current user's challenges with progress
 
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { ensureUserInDb } from "@/lib/ensureUser";
-import { ChallengeStatus } from "@prisma/client";
+
+class DuplicateOpenEndedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "DuplicateOpenEndedError";
+  }
+}
 
 // ─── POST /api/challenges ─────────────────────────────────────────────────────
 
 type CreateChallengeBody = {
   title: string;
-  totalDays: number;
-  startDate: string; // ISO date string e.g. "2024-01-15"
+  totalDays?: number | null;
+  startDate?: string; // ISO date string e.g. "2024-01-15"
 };
 
 export async function POST(request: Request) {
@@ -35,36 +41,60 @@ export async function POST(request: Request) {
   if (!title || typeof title !== "string" || title.trim().length === 0) {
     return Response.json({ error: "title is required" }, { status: 422 });
   }
-  if (!Number.isInteger(totalDays) || totalDays < 1 || totalDays > 366) {
-    return Response.json(
-      { error: "totalDays must be an integer between 1 and 366" },
-      { status: 422 }
-    );
+
+  const isOpenEnded = totalDays === undefined || totalDays === null;
+
+  if (!isOpenEnded) {
+    if (!Number.isInteger(totalDays) || totalDays < 1 || totalDays > 366) {
+      return Response.json(
+        { error: "totalDays must be an integer between 1 and 366" },
+        { status: 422 }
+      );
+    }
   }
-  if (!startDate || isNaN(Date.parse(startDate))) {
-    return Response.json(
-      { error: "startDate must be a valid ISO date string" },
-      { status: 422 }
-    );
+
+  let start: Date;
+  if (startDate) {
+    if (isNaN(Date.parse(startDate))) {
+      return Response.json(
+        { error: "startDate must be a valid ISO date string" },
+        { status: 422 }
+      );
+    }
+    start = new Date(startDate);
+  } else {
+    start = new Date();
   }
 
   // Normalize startDate to midnight UTC
-  const start = new Date(startDate);
   start.setUTCHours(0, 0, 0, 0);
-
-  // Build Log rows for all days upfront (no DB round-trips inside the loop)
-  const logData = Array.from({ length: totalDays }, (_, i) => {
-    const date = new Date(start);
-    date.setUTCDate(start.getUTCDate() + i);
-    return {
-      dayNumber: i + 1,
-      date,
-    };
-  });
 
   try {
     const challenge = await prisma.$transaction(async (tx) => {
-      // 1. Create the challenge
+      // If open-ended, check if user already has an ongoing open-ended log
+      if (isOpenEnded) {
+        const existingOpenEnded = await tx.challenge.findFirst({
+          where: { userId, totalDays: null },
+        });
+
+        if (existingOpenEnded) {
+          throw new DuplicateOpenEndedError(
+            "You already have an ongoing log — edit it in settings instead of creating a new one."
+          );
+        }
+
+        // Create open-ended challenge (no Log rows pre-created)
+        return await tx.challenge.create({
+          data: {
+            userId,
+            title: title.trim(),
+            totalDays: null,
+            startDate: start,
+          },
+        });
+      }
+
+      // Structured challenge: create challenge and bulk-insert one Log row per day
       const newChallenge = await tx.challenge.create({
         data: {
           userId,
@@ -74,13 +104,20 @@ export async function POST(request: Request) {
         },
       });
 
-      // 2. Bulk-insert Log rows (one per day)
+      const logData = Array.from({ length: totalDays }, (_, i) => {
+        const date = new Date(start);
+        date.setUTCDate(start.getUTCDate() + i);
+        return {
+          dayNumber: i + 1,
+          date,
+        };
+      });
+
       await tx.log.createMany({
         data: logData.map(({ dayNumber, date }) => ({
           challengeId: newChallenge.id,
           dayNumber,
           date,
-          // tasksTotal, tasksDone, completionPct all default to 0 in schema
         })),
       });
 
@@ -88,7 +125,10 @@ export async function POST(request: Request) {
     });
 
     return Response.json({ challenge }, { status: 201 });
-  } catch (err) {
+  } catch (err: unknown) {
+    if (err instanceof DuplicateOpenEndedError) {
+      return Response.json({ error: err.message }, { status: 409 });
+    }
     console.error("POST /api/challenges error:", err);
     return new Response("Internal Server Error", { status: 500 });
   }
@@ -124,15 +164,14 @@ export async function GET() {
     const now = new Date();
 
     const result = challenges.map((c) => {
-      // Days elapsed = number of days from startDate to today (capped at totalDays)
+      // Days elapsed = number of days from startDate to today (capped at totalDays for structured challenges)
       const msPerDay = 1000 * 60 * 60 * 24;
-      const elapsed = Math.min(
-        c.totalDays,
-        Math.max(
-          0,
-          Math.floor((now.getTime() - c.startDate.getTime()) / msPerDay) + 1
-        )
+      const rawElapsed = Math.max(
+        0,
+        Math.floor((now.getTime() - c.startDate.getTime()) / msPerDay) + 1
       );
+      const elapsed =
+        c.totalDays != null ? Math.min(c.totalDays, rawElapsed) : rawElapsed;
 
       // Percentage of logs with >0 completion
       const daysWithProgress = c.logs.filter(

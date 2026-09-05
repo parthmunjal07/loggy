@@ -16,7 +16,7 @@ import { StreakBadge } from "@/components/StreakBadge";
 export type TodayChallengeItem = {
   id: string;
   title: string;
-  totalDays: number;
+  totalDays: number | null;
   currentStreak: number;
   todayLogId: string | null;
   todayDayNumber: number | null;
@@ -112,9 +112,11 @@ export function TodayChallengeSelector({ challenges }: Props) {
 
                       <div className="flex items-center gap-3 text-xs font-mono text-zinc-400">
                         {c.todayDayNumber ? (
-                          <span>Day {c.todayDayNumber} of {c.totalDays}</span>
+                          <span>
+                            {c.totalDays ? `Day ${c.todayDayNumber} of ${c.totalDays}` : `Day ${c.todayDayNumber}`}
+                          </span>
                         ) : (
-                          <span>{c.totalDays} Days Total</span>
+                          <span>{c.totalDays ? `${c.totalDays} Days Total` : "Open-ended Log"}</span>
                         )}
                         <span>•</span>
                         <span>
