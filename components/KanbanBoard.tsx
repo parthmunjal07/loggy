@@ -19,6 +19,7 @@ import {
   Sparkle,
   X,
   Confetti,
+  ArrowsClockwise,
 } from "@phosphor-icons/react";
 
 export type KanbanTask = {
@@ -26,6 +27,7 @@ export type KanbanTask = {
   title: string;
   status: "TODO" | "IN_PROGRESS" | "DONE";
   createdAt: string | Date;
+  recurringTaskId?: string | null;
   tags?: {
     tag: {
       id: string;
@@ -63,6 +65,7 @@ const COLUMNS: { id: "TODO" | "IN_PROGRESS" | "DONE"; label: string }[] = [
 
 export function KanbanBoard({
   logId,
+  challengeId,
   dayNumber,
   initialTasks,
   isLocked = false,
@@ -76,6 +79,7 @@ export function KanbanBoard({
   // Task creation state
   const [isCreating, setIsCreating] = useState(false);
   const [newTitle, setNewTitle] = useState("");
+  const [isRecurring, setIsRecurring] = useState(false);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [availableTags, setAvailableTags] = useState<AvailableTag[]>([]);
   const [newTagName, setNewTagName] = useState("");
@@ -244,25 +248,48 @@ export function KanbanBoard({
     setNewTitle("");
     setSelectedTagIds([]);
     setIsCreating(false);
+    const wasRecurring = isRecurring;
+    setIsRecurring(false);
 
     try {
-      const res = await fetch(`/api/logs/${logId}/tasks`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, tagIds }),
-      });
+      if (wasRecurring && challengeId) {
+        const res = await fetch(`/api/challenges/${challengeId}/recurring-tasks`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, tagIds }),
+        });
 
-      if (!res.ok) {
-        throw new Error("Failed to create task");
+        if (!res.ok) {
+          throw new Error("Failed to create recurring task");
+        }
+
+        const data = await res.json();
+        const realTask = data.todayTask;
+
+        if (realTask) {
+          setTasks((current) =>
+            current.map((t) => (t.id === tempId ? realTask : t))
+          );
+        }
+      } else {
+        const res = await fetch(`/api/logs/${logId}/tasks`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, tagIds }),
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to create task");
+        }
+
+        const data = await res.json();
+        const realTask = data.task;
+
+        // Swap temp task with real task from server
+        setTasks((current) =>
+          current.map((t) => (t.id === tempId ? realTask : t))
+        );
       }
-
-      const data = await res.json();
-      const realTask = data.task;
-
-      // Swap temp task with real task from server
-      setTasks((current) =>
-        current.map((t) => (t.id === tempId ? realTask : t))
-      );
     } catch {
       setErrorBanner("Failed to save new task.");
       setTasks((current) => current.filter((t) => t.id !== tempId));
@@ -554,29 +581,46 @@ export function KanbanBoard({
             </div>
 
             {/* Form Actions */}
-            <div className="flex items-center justify-end gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsCreating(false);
-                  setNewTitle("");
-                  setSelectedTagIds([]);
-                }}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-zinc-200 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={!newTitle.trim() || isSubmitting}
-                className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-transform active:scale-[0.98] disabled:opacity-50"
-                style={{
-                  background: "var(--accent)",
-                  color: "var(--surface-0)",
-                }}
-              >
-                {isSubmitting ? "Adding..." : "Add task"}
-              </button>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+              <label className="flex items-center gap-2 cursor-pointer select-none text-xs font-mono text-zinc-400 hover:text-zinc-200 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={isRecurring}
+                  onChange={(e) => setIsRecurring(e.target.checked)}
+                  className="rounded border-[var(--border)] accent-[var(--accent)] cursor-pointer"
+                />
+                <ArrowsClockwise
+                  size={13}
+                  className={isRecurring ? "text-[var(--accent)]" : "text-zinc-400"}
+                />
+                <span>Repeat every day</span>
+              </label>
+
+              <div className="flex items-center gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCreating(false);
+                    setNewTitle("");
+                    setIsRecurring(false);
+                    setSelectedTagIds([]);
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-zinc-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!newTitle.trim() || isSubmitting}
+                  className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-transform active:scale-[0.98] disabled:opacity-50"
+                  style={{
+                    background: "var(--accent)",
+                    color: "var(--surface-0)",
+                  }}
+                >
+                  {isSubmitting ? "Adding..." : "Add task"}
+                </button>
+              </div>
             </div>
           </motion.form>
         )}
@@ -683,7 +727,19 @@ export function KanbanBoard({
                                 : "text-[var(--text-primary)]"
                             }`}
                           >
-                            {task.title}
+                            <span>{task.title}</span>
+                            {task.recurringTaskId && (
+                              <span
+                                title="Auto-repeating daily task"
+                                className="inline-flex items-center ml-1.5 align-middle opacity-60 group-hover:opacity-100 transition-opacity"
+                              >
+                                <ArrowsClockwise
+                                  size={12}
+                                  weight="bold"
+                                  className="text-[var(--text-muted)]"
+                                />
+                              </span>
+                            )}
                           </p>
 
                           {/* Tags */}

@@ -12,6 +12,7 @@ import {
   ArrowSquareOut,
   SquaresFour,
   Table,
+  Gear,
 } from "@phosphor-icons/react";
 import { HeatmapGrid, HeatmapLegend } from "@/components/HeatmapGrid";
 import { StreakBadge } from "@/components/StreakBadge";
@@ -172,7 +173,22 @@ export function ChallengeDetailClient({
               {title}
             </h1>
           </div>
-          <StreakBadge streak={currentStreak} size="lg" />
+          <div className="flex items-center gap-2.5">
+            <Link
+              href={`/challenges/${challengeId}/settings`}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono border transition-colors duration-150"
+              style={{
+                background: "var(--surface-1)",
+                borderColor: "var(--border)",
+                color: "var(--text-secondary)",
+              }}
+              title="Challenge settings & recurring tasks"
+            >
+              <Gear size={14} />
+              <span className="hidden sm:inline">Settings</span>
+            </Link>
+            <StreakBadge streak={currentStreak} size="lg" />
+          </div>
         </div>
 
         {/* Stats row */}

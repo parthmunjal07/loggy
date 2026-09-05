@@ -41,13 +41,51 @@ export async function ensureTodayLog(challenge: {
 
   // 3. Create today's log row with concurrency protection
   try {
-    const created = await prisma.log.create({
-      data: {
-        challengeId: challenge.id,
-        dayNumber,
-        date: today,
-      },
+    const created = await prisma.$transaction(async (tx) => {
+      const newLog = await tx.log.create({
+        data: {
+          challengeId: challenge.id,
+          dayNumber,
+          date: today,
+        },
+      });
+
+      // Query active recurring tasks for this challenge
+      const activeTemplates = await tx.recurringTask.findMany({
+        where: { challengeId: challenge.id, isActive: true },
+        include: { tags: true },
+      });
+
+      if (activeTemplates.length > 0) {
+        for (const template of activeTemplates) {
+          await tx.task.create({
+            data: {
+              logId: newLog.id,
+              title: template.title,
+              status: "TODO",
+              recurringTaskId: template.id,
+              ...(template.tags.length > 0 && {
+                tags: {
+                  create: template.tags.map((rt) => ({ tagId: rt.tagId })),
+                },
+              }),
+            },
+          });
+        }
+
+        await tx.log.update({
+          where: { id: newLog.id },
+          data: {
+            tasksTotal: activeTemplates.length,
+            tasksDone: 0,
+            completionPct: 0,
+          },
+        });
+      }
+
+      return newLog;
     });
+
     return created;
   } catch {
     // If a concurrent request created it simultaneously, return the existing row

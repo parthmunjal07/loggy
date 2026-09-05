@@ -30,6 +30,8 @@ type Props = {
 };
 
 export function TodayChallengeSelector({ challenges }: Props) {
+  const hasOpenEnded = challenges.some((c) => c.totalDays === null);
+
   return (
     <>
       <AppNav />
@@ -58,65 +60,76 @@ export function TodayChallengeSelector({ challenges }: Props) {
               Which today&apos;s board would you like to open?
             </h1>
             <p
-              className="text-xs font-mono"
+              className="text-xs sm:text-sm font-mono"
               style={{ color: "var(--text-muted)" }}
             >
-              You have {challenges.length} active challenges. Select one to launch today&apos;s Kanban execution board.
+              You have {challenges.length} active logs running in parallel.
             </p>
           </div>
 
           {/* Challenge List */}
-          <div className="flex flex-col gap-3.5">
+          <div className="flex flex-col gap-3">
             {challenges.map((c) => {
-              const targetUrl = c.todayLogId
-                ? `/challenges/${c.id}/day/${c.todayLogId}`
-                : `/challenges/${c.id}`;
-
-              const isCompleteToday = c.todayCompletionPct >= 100;
+              const href = c.todayLogId
+                ? `/challenges/${c.id}/days/${c.todayDayNumber}`
+                : `/challenges/${c.id}?today=true`;
 
               return (
                 <Link
                   key={c.id}
-                  href={targetUrl}
-                  className="group card rounded-2xl p-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-150 hover:border-zinc-700 active:scale-[0.99]"
+                  href={href}
+                  className="card group rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-150 hover:border-zinc-500/50"
                   style={{
                     background: "var(--surface-1)",
-                    borderColor: "var(--border)",
+                    border: "1px solid var(--border)",
                   }}
                 >
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start sm:items-center gap-3.5">
                     <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+                      className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 mt-0.5 sm:mt-0"
                       style={{
                         background: "var(--surface-2)",
-                        color: "var(--accent)",
+                        border: "1px solid var(--border)",
                       }}
                     >
-                      <Target size={20} />
+                      {c.todayCompletionPct === 100 ? (
+                        <CheckCircle
+                          size={20}
+                          weight="fill"
+                          className="text-[var(--accent)]"
+                        />
+                      ) : c.totalDays === null ? (
+                        <Sparkle
+                          size={20}
+                          weight="fill"
+                          className="text-[var(--accent)]"
+                        />
+                      ) : (
+                        <Target
+                          size={20}
+                          weight="bold"
+                          className="text-[var(--accent)]"
+                        />
+                      )}
                     </div>
 
                     <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h2
-                          className="text-base font-semibold group-hover:text-[var(--accent)] transition-colors"
-                          style={{ color: "var(--text-primary)" }}
-                        >
-                          {c.title}
-                        </h2>
-                        {isCompleteToday && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-950/60 text-emerald-300 border border-emerald-800/80">
-                            <CheckCircle size={11} weight="fill" /> Done
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-3 text-xs font-mono text-zinc-400">
-                        {c.todayDayNumber ? (
+                      <h2
+                        className="text-sm font-semibold group-hover:text-[var(--accent)] transition-colors"
+                        style={{ color: "var(--text-primary)" }}
+                      >
+                        {c.title}
+                      </h2>
+                      <div
+                        className="flex items-center gap-2 text-xs font-mono mt-0.5"
+                        style={{ color: "var(--text-muted)" }}
+                      >
+                        {c.totalDays != null ? (
                           <span>
-                            {c.totalDays ? `Day ${c.todayDayNumber} of ${c.totalDays}` : `Day ${c.todayDayNumber}`}
+                            Day {c.todayDayNumber ?? 1} of {c.totalDays}
                           </span>
                         ) : (
-                          <span>{c.totalDays ? `${c.totalDays} Days Total` : "Open-ended Log"}</span>
+                          <span>Day {c.todayDayNumber ?? 1} (Open-Ended)</span>
                         )}
                         <span>•</span>
                         <span>
@@ -148,11 +161,20 @@ export function TodayChallengeSelector({ challenges }: Props) {
             })}
           </div>
 
-          {/* New Challenge Footer Action */}
-          <div className="text-center mt-8 pt-4">
+          {/* Footer Actions */}
+          <div className="flex flex-wrap items-center justify-center gap-6 mt-8 pt-4">
+            {!hasOpenEnded && (
+              <Link
+                href="/challenges/new?mode=open"
+                className="inline-flex items-center gap-1.5 text-xs font-mono text-zinc-400 hover:text-white transition-colors"
+              >
+                <Sparkle size={13} weight="fill" className="text-[var(--accent)]" />
+                <span>Start an open log</span>
+              </Link>
+            )}
             <Link
               href="/challenges/new"
-              className="inline-flex items-center gap-2 text-xs font-mono text-zinc-400 hover:text-white transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-mono text-zinc-400 hover:text-white transition-colors"
             >
               <Plus size={13} />
               <span>Or launch a new challenge</span>

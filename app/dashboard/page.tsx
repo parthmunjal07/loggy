@@ -4,7 +4,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Plus } from "@phosphor-icons/react/dist/ssr";
+import { Plus, Sparkle } from "@phosphor-icons/react/dist/ssr";
 import { prisma } from "@/lib/prisma";
 import { ChallengeCard } from "@/components/ChallengeCard";
 import type { Metadata } from "next";
@@ -43,6 +43,7 @@ export default async function DashboardPage() {
   });
 
   const now = new Date();
+  const hasOpenEnded = challenges.some((c) => c.totalDays === null);
 
   const enriched = challenges.map((c) => {
     const msPerDay = 1000 * 60 * 60 * 24;
@@ -68,7 +69,7 @@ export default async function DashboardPage() {
   return (
     <div>
       {/* Page header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1
             className="text-2xl font-bold tracking-tight mb-1"
@@ -86,19 +87,81 @@ export default async function DashboardPage() {
           </p>
         </div>
 
-        <Link
-          href="/challenges/new"
-          id="new-challenge-btn"
-          className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 active:scale-[0.97]"
+        <div className="flex items-center gap-2.5">
+          {!hasOpenEnded && (
+            <Link
+              href="/challenges/new?mode=open"
+              id="start-open-log-btn"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium transition-all duration-150 active:scale-[0.97]"
+              style={{
+                background: "var(--surface-1)",
+                color: "var(--text-primary)",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <Sparkle size={15} weight="fill" style={{ color: "var(--accent)" }} />
+              Start open log
+            </Link>
+          )}
+
+          <Link
+            href="/challenges/new"
+            id="new-challenge-btn"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 active:scale-[0.97]"
+            style={{
+              background: "var(--accent)",
+              color: "var(--surface-0)",
+            }}
+          >
+            <Plus size={15} weight="bold" />
+            New challenge
+          </Link>
+        </div>
+      </div>
+
+      {/* Open Log prompt banner when user has started challenges but has no open log */}
+      {!hasOpenEnded && enriched.length > 0 && (
+        <div
+          className="mb-6 p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 border"
           style={{
-            background: "var(--accent)",
-            color: "var(--surface-0)",
+            background: "var(--surface-1)",
+            borderColor: "var(--border)",
           }}
         >
-          <Plus size={15} weight="bold" />
-          New challenge
-        </Link>
-      </div>
+          <div className="flex items-center gap-3">
+            <div
+              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+              style={{ background: "var(--accent-subtle)" }}
+            >
+              <Sparkle size={18} weight="fill" style={{ color: "var(--accent)" }} />
+            </div>
+            <div>
+              <h2
+                className="text-sm font-semibold"
+                style={{ color: "var(--text-primary)" }}
+              >
+                Want to log without a fixed challenge?
+              </h2>
+              <p
+                className="text-xs"
+                style={{ color: "var(--text-muted)" }}
+              >
+                Track your daily productivity continuously with an open-ended log. No end date.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/challenges/new?mode=open"
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium shrink-0 transition-all duration-150 active:scale-[0.97]"
+            style={{
+              background: "var(--accent)",
+              color: "var(--surface-0)",
+            }}
+          >
+            Start open log
+          </Link>
+        </div>
+      )}
 
       {/* Challenges grid */}
       {enriched.length === 0 ? (
@@ -147,23 +210,37 @@ function EmptyState() {
         No challenges yet
       </h2>
       <p
-        className="text-sm mb-6 max-w-[280px]"
+        className="text-sm mb-6 max-w-[320px]"
         style={{ color: "var(--text-muted)" }}
       >
-        Pick a commitment: 30 days, 100 days, or whatever it takes. Plan your
-        days on the Kanban board and watch the heatmap fill in.
+        Pick a commitment (30 or 100 days) or start a continuous open log with no end date.
       </p>
-      <Link
-        href="/challenges/new"
-        id="empty-state-new-challenge-btn"
-        className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 active:scale-[0.97]"
-        style={{
-          background: "var(--accent)",
-          color: "var(--surface-0)",
-        }}
-      >
-        Start a challenge
-      </Link>
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <Link
+          href="/challenges/new"
+          id="empty-state-new-challenge-btn"
+          className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 active:scale-[0.97]"
+          style={{
+            background: "var(--accent)",
+            color: "var(--surface-0)",
+          }}
+        >
+          Start a challenge
+        </Link>
+        <Link
+          href="/challenges/new?mode=open"
+          id="empty-state-open-log-btn"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 active:scale-[0.97]"
+          style={{
+            background: "var(--surface-2)",
+            color: "var(--text-primary)",
+            border: "1px solid var(--border)",
+          }}
+        >
+          <Sparkle size={15} weight="fill" style={{ color: "var(--accent)" }} />
+          Start an open log
+        </Link>
+      </div>
     </div>
   );
 }

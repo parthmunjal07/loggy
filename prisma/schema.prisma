@@ -41,9 +41,10 @@ model Challenge {
   currentStreak Int @default(0)
   longestStreak Int @default(0)
 
-  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  logs         Log[]
-  pointsLedger PointsLedger[]
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs           Log[]
+  pointsLedger   PointsLedger[]
+  recurringTasks RecurringTask[]
 
   @@index([userId])
 }
@@ -82,23 +83,57 @@ model Log {
 // Task — the atomic unit of work inside a day's Kanban board
 // ---------------------------------------------------------------------------
 model Task {
-  id        String     @id @default(cuid())
-  logId     String
-  title     String
-  status    TaskStatus @default(TODO)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id              String     @id @default(cuid())
+  logId           String
+  recurringTaskId String?
+  title           String
+  status          TaskStatus @default(TODO)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
-  log  Log       @relation(fields: [logId], references: [id], onDelete: Cascade)
-  tags TaskTag[]
+  log           Log            @relation(fields: [logId], references: [id], onDelete: Cascade)
+  recurringTask RecurringTask? @relation(fields: [recurringTaskId], references: [id], onDelete: SetNull)
+  tags          TaskTag[]
 
   @@index([logId])
+  @@index([recurringTaskId])
 }
 
 enum TaskStatus {
   TODO
   IN_PROGRESS
   DONE
+}
+
+// ---------------------------------------------------------------------------
+// RecurringTask — a template that auto-spawns Task rows for every day
+// ---------------------------------------------------------------------------
+model RecurringTask {
+  id          String   @id @default(cuid())
+  challengeId String
+  title       String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  challenge Challenge          @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  tags      RecurringTaskTag[]
+  tasks     Task[]
+
+  @@index([challengeId])
+}
+
+// ---------------------------------------------------------------------------
+// RecurringTaskTag — join table between RecurringTask and Tag
+// ---------------------------------------------------------------------------
+model RecurringTaskTag {
+  recurringTaskId String
+  tagId           String
+
+  recurringTask RecurringTask @relation(fields: [recurringTaskId], references: [id], onDelete: Cascade)
+  tag           Tag           @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([recurringTaskId, tagId])
 }
 
 // ---------------------------------------------------------------------------
@@ -109,7 +144,8 @@ model Tag {
   name   String  @unique // case-insensitive enforced in application code
   userId String? // null = preset/global tag
 
-  tasks TaskTag[]
+  tasks          TaskTag[]
+  recurringTasks RecurringTaskTag[]
 }
 
 // ---------------------------------------------------------------------------
